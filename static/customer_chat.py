@@ -456,10 +456,10 @@ user_states = {}
 customer_chat_router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
-@customer_chat_router.get('/customer/customer-chat', response_class=HTMLResponse)
-async def render_customer_chat(request: Request):
-    logger.info("Отображение страницы customer_chat.html.")
-    return templates.TemplateResponse('customer_chat.html', {"request": request})
+# @customer_chat_router.get('/customer/customer-chat', response_class=HTMLResponse)
+# async def render_customer_chat(request: Request):
+#     logger.info("Отображение страницы customer_chat.html.")
+#     return templates.TemplateResponse('customer_chat.html', {"request": request})
 
 @customer_chat_router.post('/customer/customer-send-message')
 async def respond_to_message(data: dict, db: Session = Depends(get_db)):

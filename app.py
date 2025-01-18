@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sqlalchemy import DBSessionMiddleware
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Template
+from starlette.templating import Jinja2Templates
+
 from customer_chat import customer_chat_router
 
 
@@ -34,19 +36,17 @@ app.state.secret_key = 'mamba676'
 # app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 app.include_router(customer_chat_router, prefix="/customer_chat", tags=["Customer Chat"])
 
-# Статические файлы и шаблоны
+# Подключаем директорию для статических файлов
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/kanban", response_class=HTMLResponse)
-async def kanban():
-    # Здесь предполагается, что шаблон kanban.html находится в директории templates
-    with open("/kanban.html", encoding="windows-1251") as file:
-        template = Template(file.read())
-    return HTMLResponse(template.render())
-
+async def kanban(request: Request):
+    return templates.TemplateResponse("kanban.html", {"request": request})
 
 # Запускаем приложение
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app:app", host="0.0.0.0", port=5000, reload=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=5000, reload=True)

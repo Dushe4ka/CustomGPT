@@ -32,7 +32,8 @@ from langchain.memory import ConversationBufferMemory
 from customer.get_template import find_question_template
 from langchain.memory import ConversationBufferWindowMemory
 
-templates = Jinja2Templates(directory="static")
+# Настройка шаблонов
+templates = Jinja2Templates(directory="templates")
 
 # Создание роутера для чата с клиентами
 customer_chat_router = APIRouter()
@@ -453,7 +454,7 @@ graph = graph_builder.compile()
 user_states = {}
 
 
-customer_chat_router = APIRouter()
+# customer_chat_router = APIRouter()
 # templates = Jinja2Templates(directory="templates")
 
 @customer_chat_router.get('/customer/customer-chat', response_class=HTMLResponse)
