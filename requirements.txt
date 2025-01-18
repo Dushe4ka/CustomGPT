@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+spacy
+fastapi-sqlalchemy
+sqlalchemy
+langchain
+langchain-openai
+python-dotenv
+pydantic
+pandas
+openai
+faiss-cpu
+jinja2

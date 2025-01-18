@@ -1,0 +1,472 @@
+/*Общие стили для заголовков */
+h3 {
+    font-family: "Roboto";
+    font-weight: 500;
+    font-size: 30px;
+    color: #3F3F3F;
+    margin-bottom: 20px;
+}
+
+.btn-custom:hover{
+background-color: #4946D1;
+color: #ffffff;
+}
+
+
+
+/* Общие стили для меток (label) */
+label, div {
+    font-family: "Roboto";
+    font-weight: 400!important;
+    font-size: 16px!important;
+    color: #3F3F3F;
+    margin-bottom: 8px!important;
+}
+
+/* Общие стили для текста внутри полей ввода (placeholder) */
+input::placeholder {
+    font-family: "Roboto", Arial, sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #8891AA;
+}
+
+/* Общие стили для ссылок */
+a {
+    font-family: "Roboto", Arial, sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    color: #615EF0;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #4e4cc9;
+}
+
+
+/* Стили для чата */
+.chat-box {
+     width: 400px; /* Уменьшенная ширина */
+    height: 600px; /* Уменьшенная высота */
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: fixed; /* Фиксируем положение */
+    bottom: 20px; /* Отступ снизу */
+    right: 20px; /* Отступ справа */
+    z-index: 1000; /* Поверх других элементов */
+}
+
+.chat-header {
+   background-color: #615EF0;
+    color: white;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center; /* Выравнивание по вертикали */
+    justify-content: start; /* Выравнивание по горизонтали (слева) */
+    height: 60px; /* Фиксированная высота */
+
+}
+
+.chat-header img {
+    width: 40px!important;
+    height: 40px!important;
+    margin-right: 8px;
+}
+
+.chat-messages {
+   flex-grow: 1;
+    overflow-y: auto;
+    background-color: #f9f9f9;
+    padding: 10px;
+}
+
+.chat-input {
+    background-color: white;
+    border-top: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 60px; /* Минимальная высота блока */
+}
+
+.chat-input input[type="text"] {
+       border: none;
+    box-shadow: none;
+    flex-grow: 1;
+    padding: 8px;
+    margin-right: 10px;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 100%; /* Убедитесь, что поле ввода занимает всю доступную высоту */
+}
+
+.chat-input button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    }
+
+.chat-input button img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Стили сообщения от бота */
+.bot-message {
+     background-color: #F2F2F2;
+    border-radius: 10px;
+    color: #3F3F3F;
+    max-width: 80%;
+    margin-left: 10px; /* Увеличить отступ между сообщением и аватаром */
+    padding: 10px; /* Внутренние отступы для самого сообщения */
+}
+
+/* Стили сообщения от пользователя */
+.user-message {
+      background-color: #615EF0;
+    border-radius: 10px;
+    color: #ffffff;
+    max-width: 80%;
+    padding: 10px;
+    word-wrap: break-word;
+    margin-right: 10px; /* Отступ от правого края */
+}
+
+/* Принудительный белый цвет текста для <p> внутри user-message */
+.user-message p {
+    color: #ffffff !important;
+    text-align: left; /* Выровнено по правому краю */
+}
+
+/* Скрытие иконки для сообщений от пользователя */
+.d-flex.justify-content-end .me-2 {
+    display: none;
+}
+
+.bot-avatar
+{
+height:32px;
+width:32px;
+}
+
+.bot_name {
+    color: #ffffff; /* Белый цвет текста */
+     margin-left: 12px; /* Отступ между иконкой и текстом */
+    align-self: center; /* Центрирование по вертикали */
+}
+
+.send-btn
+
+{
+height:24px;
+width:24px;
+}
+
+/*Ссылки на возможные варианты ответа*/
+
+.product-link {
+    color: #615EF0;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+
+/*Боковое меню*/
+
+/* Линия между логотипом и меню */
+.menu-divider {
+     width: 80%;
+    height: 2px;
+    background-color: #E1E3EA;
+    border: none;
+    margin: 16px auto 24px auto;
+}
+
+
+/* Стили для боковой панели */
+#sidebar-wrapper {
+   width: 280px;
+    height: 100vh;
+    background-color: #ffffff;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    padding-top: 20px;
+    transition: width 0.3s;
+    box-shadow: none;
+}
+
+.logo
+{
+width:111px;
+height:23px;
+}
+
+/* Стили контейнера меню */
+.menu-container {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+/* Стили заголовка боковой панели */
+.sidebar-heading {
+    height: 24px; /* Фиксируем высоту на 24px */
+    display: flex;
+    align-items: center; /* Центрируем содержимое по вертикали */
+    justify-content: space-between;
+    padding: 0; /* Убираем любые внутренние отступы */
+    background-color: #ffffff;
+    color: #615EF0;
+}
+
+
+/* Контейнер для разделителя */
+.sidebar-heading-divider {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 16px; /* Отступ сверху между логотипом и разделительной линией */
+
+}
+
+/* Стиль для логотипа */
+#logo-text {
+    font-weight: 600;
+    margin-left: 12px; /* Отступ сдвигает логотип на 10px правее */
+    font-size: 18px; /* При необходимости можно уменьшить или увеличить размер текста */
+}
+
+/* Кнопка меню */
+#menu-toggle {
+    padding: 0; /* Убираем внутренние отступы */
+    margin: 0; /* Убираем внешние отступы */
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center; /* Центрируем иконку внутри кнопки */
+    justify-content: center;
+    height: 100%; /* Кнопка занимает всю высоту родительского контейнера */
+}
+
+#menu-toggle img {
+    width: 24px;
+    height: 24px;
+}
+
+/* Стили для активного  пункта меню */
+.list-group-item.active {
+     background-color: #615EF0; /* Фон активного пункта */
+    color: #ffffff; /* Цвет текста активного пункта */
+    border-radius: 8px; /* Опционально, для закругления углов */
+}
+
+/* Меняем цвет иконки в активном состоянии */
+.list-group-item.active .icon {
+    filter: brightness(0) invert(1); /* Делаем иконку белой */
+}
+
+/* Текст активного пункта меню */
+.list-group-item.active .menu-text {
+    color: #fff; /* Белый текст */
+}
+
+/* Цвет активного элемента при наведении */
+.list-group-item.active:hover {
+    background-color: #7C79ED; /* Цвет при наведении */
+}
+
+
+/* Стили для списка навигации */
+.list-group-item {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 16px;
+    border: none;
+    background-color: transparent;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin-bottom: 20px;
+    border-radius: 8px; /* Закругление */
+}
+
+/* Стили иконок внутри пунктов меню */
+
+
+/* Стили текста меню */
+.menu-text {
+    font-size: 16px;
+    color: #343a40;
+}
+
+/* Стили при наведении для пунктов меню */
+.list-group-item:hover {
+    background-color: #f0f0f5;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+
+
+
+
+/* Стили информации о пользователе в футере */
+.user-info {
+    flex-grow: 1;
+    font-size: 14px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.user-email {
+    font-size: 14px!important;
+    color: #888888;
+}
+
+/* Отступ между логотипом и пунктами меню */
+.sidebar-heading {
+    margin-bottom: 16px;
+}
+
+/* Позиционирование основного контента */
+#page-content-wrapper {
+    margin-left: 300px;
+    transition: margin-left 0.3s ease;
+}
+
+/* Закругление для первого пункта меню */
+.list-group-item:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+
+
+/* Закругление для первого пункта меню */
+.list-group-item:first-child {
+    border-top-left-radius: 8px; /* Закругление верхнего левого угла */
+    border-top-right-radius: 8px; /* Закругление верхнего правого угла */
+}
+
+/* Закругление для последнего пункта меню */
+.list-group-item:last-child {
+    border-bottom-left-radius: 8px; /* Закругление нижнего левого угла */
+    border-bottom-right-radius: 8px; /* Закругление нижнего правого угла */
+    margin-bottom: 0; /* Убираем отступ снизу для последнего элемента */
+}
+
+/* Стили иконок внутри пунктов меню */
+.list-group-item img {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+}
+
+/* Стили текста меню */
+.menu-text {
+    font-size: 16px;
+    color: #343a40;
+}
+
+/* Стили при наведении для пунктов меню */
+.list-group-item:hover {
+    background-color: #f0f0f5;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Стили для футера боковой панели */
+.sidebar-footer {
+    margin-top: auto;
+    border-top:none;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    padding-top: 16px; /* Отступ сверху для блока с пользователем */
+    padding-bottom: 0; /* Убираем лишний отступ снизу */
+}
+
+.user-divider
+{
+margin-top: 41vh; /* Отступ будет 20% от высоты экрана */
+
+}
+
+
+/* Стили для изображения пользователя */
+.sidebar-footer img {
+    margin-right: 12px;
+}
+
+
+/* Отступ снизу для последнего элемента меню */
+.list-group-item:last-child {
+    margin-bottom: 16px; /* Отступ перед линией */
+}
+
+/* Стили информации о пользователе в футере */
+.user-info {
+    flex-grow: 1;
+    font-size: 14px;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #343a40;
+}
+
+.user-email {
+    font-size: 12px;
+    color: #888888;
+}
+
+/* Стили иконки выхода */
+.logout-icon img {
+    width: 24px;
+    height: 24px;
+}
+
+.logout-icon {
+    display: flex; /* Обеспечиваем правильное позиционирование внутри */
+    align-items: center; /* Выравниваем по вертикали */
+    justify-content: center; /* Центрируем иконку по горизонтали */
+    width: 24px; /* Устанавливаем ширину контейнера */
+    height: 24px; /* Устанавливаем высоту контейнера */
+}
+
+/* Стили для иконок в пунктах меню */
+.list-group-item .icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 12px;
+}
+
+/* Отступ между логотипом и пунктами меню */
+.sidebar-heading {
+    margin-bottom: 16px;
+}
+
+/*Чат с сотрудником*/
+
+.product-suggestion {
+    margin-bottom: 10px; /* Отступ снизу между ссылками */
+}
+
+/*Чат с клиентом*/
+
+
+
+

@@ -1,0 +1,45 @@
+<div class="bg-white border-end" id="sidebar-wrapper">
+    <div class="sidebar-heading d-flex justify-content-between align-items-center p-3">
+        <img id="logo-text" src="{{ url_for('static', filename='Image/Logo.svg') }}" alt="CustomGPT Logo" class="logo">
+        <button class="btn btn-link p-0" id="menu-toggle">
+            <img src="{{ url_for('static', filename='Image/nav.svg') }}" alt="Toggle Menu">
+        </button>
+    </div>
+
+    <hr class="menu-divider">
+
+    <!-- Контейнер для меню с отступами -->
+    <div class="menu-container px-3"> <!-- Добавлен класс menu-container с отступами -->
+        <div class="list-group list-group-flush">
+            <!-- Измените href на URL-адрес маршрута Flask -->
+           <a href="{{ url_for('kanban') }}"
+   class="list-group-item list-group-item-action d-flex align-items-center" data-tooltip="CRM">
+    <img src="{{ url_for('static', filename='Image/target.svg') }}" alt="CRM" class="icon">
+    <span class="menu-text">CRM</span>
+                <a href="{{ url_for('chat_bp.chat') }}"
+   class="list-group-item list-group-item-action d-flex align-items-center" data-tooltip="CRM">
+    <img src="{{ url_for('static', filename='Image/target.svg') }}" alt="CRM" class="icon">
+    <span class="menu-text">Поиск товара</span>
+</a>
+
+
+
+        </div>
+    </div>
+
+    <!-- Добавляем разделительную линию перед блоком с пользователем -->
+    <hr class="menu-divider user-divider">
+
+
+    <!-- Блок с информацией о пользователе -->
+    <div class="sidebar-footer d-flex align-items-center p-3">
+        <img src="{{ url_for('static', filename='Image/Frame.svg') }}" alt="User Icon" class="icon">
+        <div class="user-info">
+            <span class="user-name">{{ username }}</span><br>
+            <span class="user-email">{{ email }}</span>
+        </div>
+        <a href="#" class="logout-icon ms-auto">
+            <img src="{{ url_for('static', filename='Image/Login 3.svg') }}" alt="Logout Icon">
+        </a>
+    </div>
+</div>

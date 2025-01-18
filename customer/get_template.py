@@ -1,0 +1,87 @@
+# -*- coding: windows-1251 -*-
+from models import PredefinedQuestion  # Ìîäåëü èç áàçû äàííûõ
+from db import SessionLocal
+import os  # Äëÿ ïğîâåğêè ñóùåñòâîâàíèÿ ôàéëîâ
+import faiss  # Äëÿ ğàáîòû ñ FAISS èíäåêñàìè
+import numpy as np  # Äëÿ ğàáîòû ñ ìàññèâàìè èäåíòèôèêàòîğîâ
+from langchain_openai import OpenAIEmbeddings  # Äëÿ ãåíåğàöèè ıìáåääèíãîâ
+from customer.config import SessionLocal, logger, openai_api_key  # Äëÿ ğàáîòû ñ áàçîé äàííûõ, ëîãèğîâàíèå è êëş÷ API
+from sqlalchemy.sql import text  # Äëÿ âûïîëíåíèÿ SQL-çàïğîñîâ
+from typing import Optional  # Äëÿ àííîòàöèè âîçâğàùàåìîãî òèïà
+from customer.faiss import save_question_index  # Äëÿ ïåğåñîçäàíèÿ FAISS èíäåêñà
+
+def get_response_template(session: SessionLocal, category: str, stage: str) -> Optional[str]:
+    """
+    Ïîëó÷àåò øàáëîí îòâåòà èç òàáëèöû predefined_questions íà îñíîâå êàòåãîğèè è ñòàäèè äèàëîãà.
+
+    :param session: SQLAlchemy ñåññèÿ äëÿ âûïîëíåíèÿ çàïğîñîâ.
+    :param category: Êàòåãîğèÿ âîïğîñà.
+    :param stage: Ñòàäèÿ äèàëîãà.
+    :return: Øàáëîí îòâåòà èëè None, åñëè øàáëîí íå íàéäåí.
+    """
+    try:
+        logger.info(f"Çàïğîñ øàáëîíà äëÿ êàòåãîğèè '{category}' è ñòàäèè '{stage}'.")
+
+        # Âûïîëíÿåì çàïğîñ â òàáëèöó predefined_questions
+        template = (
+            session.query(PredefinedQuestion.answer)
+            .filter_by(category=category, stage=stage)
+            .scalar()
+        )
+
+        if template:
+            logger.info(f"Íàéäåí øàáëîí äëÿ êàòåãîğèè '{category}' è ñòàäèè '{stage}'.")
+        else:
+            logger.warning(f"Øàáëîí äëÿ êàòåãîğèè '{category}' è ñòàäèè '{stage}' íå íàéäåí.")
+
+        return template
+    except Exception as e:
+        logger.error(f"Îøèáêà ïğè ïîëó÷åíèè øàáëîíà äëÿ êàòåãîğèè '{category}' è ñòàäèè '{stage}': {e}")
+        return None
+
+def find_question_template(query: str) -> Optional[str]:
+    """
+    Íàõîäèò øàáëîí îòâåòà íà îñíîâå âîïğîñà ïîëüçîâàòåëÿ, èñïîëüçóÿ FAISS.
+    """
+    logger.info(f"Èùåì ïîäõîäÿùèé øàáëîí äëÿ âîïğîñà: '{query}'")
+    try:
+        # Ïğîâåğÿåì ñóùåñòâîâàíèå ôàéëîâ
+        if not os.path.exists("question_index.faiss") or not os.path.exists("question_ids.npy"):
+            logger.info("Èíäåêñ âîïğîñîâ îòñóòñòâóåò. Ñîçäà¸ì íîâûé èíäåêñ.")
+            save_question_index()
+
+        # ×òåíèå èíäåêñà è èäåíòèôèêàòîğîâ âîïğîñîâ
+        index = faiss.read_index("question_index.faiss")
+        question_ids = np.load("question_ids.npy")
+        logger.info("Èíäåêñ âîïğîñîâ è èäåíòèôèêàòîğû óñïåøíî çàãğóæåíû.")
+
+        # Ãåíåğàöèÿ ıìáåääèíãà äëÿ çàïğîñà
+        embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+        query_vector = embeddings.embed_query(query)
+
+        # Ïîèñê áëèæàéøèõ ñîñåäåé
+        D, I = index.search(np.array([query_vector]), k=1)
+        logger.info(f"Ğåçóëüòàòû ïîèñêà: D={D}, I={I}")
+
+        # Ïğîâåğêà ğåçóëüòàòà
+        if len(I[0]) > 0 and D[0][0] < 0.5:  # Ïîğîãîâîå çíà÷åíèå ìîæíî íàñòğîèòü
+            matched_question_id = question_ids[I[0][0]]
+            logger.info(f"Íàéäåí ïîäõîäÿùèé âîïğîñ ñ ID: {matched_question_id}")
+
+            # Èçâëåêàåì øàáëîí îòâåòà èç áàçû äàííûõ
+            session = SessionLocal()
+            query = text("SELECT answer FROM predefined_questions WHERE id = :id")
+            result = session.execute(query, {"id": int(matched_question_id)}).scalar()
+            session.close()
+
+            if result:
+                logger.info(f"Øàáëîí îòâåòà: {result}")
+                return result
+            else:
+                logger.warning("Øàáëîí îòâåòà íå íàéäåí â áàçå äàííûõ.")
+        else:
+            logger.warning("Ïîäõîäÿùèé âîïğîñ íå íàéäåí â èíäåêñå.")
+        return None
+    except Exception as e:
+        logger.error(f"Îøèáêà ïğè ïîèñêå øàáëîíà ÷åğåç FAISS: {e}", exc_info=True)
+        return None

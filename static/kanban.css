@@ -1,0 +1,300 @@
+body {
+    font-family: 'Roboto', sans-serif; /* Используем шрифт Roboto */
+    background-color: #ffffff;
+     overflow-x: hidden; /* Скрываем горизонтальный скролл */
+}
+
+.kanban-board {
+  display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    margin-left: 150px;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    max-width: calc(100vw - 300px);
+}
+
+.column {
+        width: 409px; /* Новая ширина столбцов */
+    padding: 0 44px; /* Отступы внутри столбцов */
+    border-radius: 4px;
+    flex: none;
+    min-height: 200px;
+    box-sizing: border-box; /* Учитываем отступы */
+}
+
+.column + .column {
+    border-left: 1px solid #e1e3ea; /* Разделительная линия между столбцами */
+}
+
+.column h2 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+}
+
+.tasks-container {
+    padding-right: 44px; /* Отступ справа, чтобы карточки были ближе к линии */
+}
+
+.tasks {
+     display: flex;
+    flex-direction: column;
+    gap: 20px; /* Отступ между карточками */
+    padding-top: 44px;
+    align-items: flex-start; /* Выровняем карточки внутри столбца */
+}
+
+.task {
+
+      width: 100%; /* Ширина карточки будет равна ширине столбца */
+    max-width: 321px; /* Фиксируем максимальную ширину карточки */
+    height: 146px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 16px;
+    background-color: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.task span {
+    display: block;
+    font-weight: bold;
+}
+
+.task .price {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.price-container {
+  display: flex; /* Горизонтальное выравнивание */
+    align-items: center; /* Центрируем элементы по вертикали */
+    justify-content: space-between; /* Разделение элементов на противоположных концах */
+    margin-top: auto; /* Отталкиваем от верхней части карточки */
+}
+
+.task button {
+    background-color: transparent;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    margin: 5px 0;
+    display: none; /* Скрываем кнопки по умолчанию */
+}
+
+.task:hover button {
+    display: block; /* Показываем кнопки при наведении */
+}
+
+.task button:hover {
+    text-decoration: underline;
+}
+
+.task.hovered {
+    transform: translateY(-5px) rotate(-5deg); /* Наклон карточки на -5 градусов */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Тень под карточкой */
+    border: 2px dashed #007bff; /* Подсветка для перетаскиваемой карточки */
+    background-color: #e0f7fa; /* Цвет фона при наведении */
+}
+
+.drop-shadow {
+    position: absolute;
+    width: 100%; /* Ширина равна ширине колонки */
+    height: 10px; /* Высота тени */
+    background-color: rgba(0, 0, 0, 0.1); /* Цвет тени */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Тень */
+    z-index: 1; /* Показать над другими элементами */
+    pointer-events: none; /* Игнорировать события мыши */
+    transform: translateY(-50%); /* Поднять тень над следующей задачей */
+}
+
+.user-icon {
+    width: 32px;
+    height: 32px;
+    margin-left: 10px; /* Отступ между ценой и аватаркой */
+}
+
+.task-details {
+     position: fixed; /* Исправлено с 'absolute' на 'fixed' для лучшего позиционирования */
+    right: 0;
+    top: 0;
+    width: 50%; /* Ширина детали задачи */
+    height: 100vh; /* Высота окна задачи на весь экран */
+    background-color: white;
+    padding: 20px;
+    box-shadow: -6px 0px 26px rgba(224, 231, 255, 1); /* Тень для визуального отделения */
+    overflow-y: auto; /* Прокрутка, если содержимое выходит за пределы */
+    z-index: 100; /* Чтобы окно отображалось поверх других элементов */
+}
+
+.task-id {
+    font-weight: 400;
+    color: #3F3F3F; /* Цвет для .task-id */
+    margin-bottom: 12px; /* Отступ между .task-id и .task-name */
+}
+
+.task-name {
+    font-size: 16px;
+    margin-bottom: 24px; /* Отступ между .task-name и price-container */
+    color: #3F3F3F;
+    font-weight: 600;
+}
+
+.price {
+    color: #3F3F3F; /* Цвет для цены */
+    font-weight: 600;
+}
+
+.task-content {
+    padding: 14px 20px; /* Отступы сверху и снизу по 14px, слева и справа по 20px */
+    flex-grow: 1; /* Занять доступное пространство */
+}
+
+.column-header {
+    display: flex;
+    align-items: left; /* Центрируем по вертикали */
+    margin-bottom: 10px; /* Отступ снизу */
+}
+
+
+
+
+.summary-container {
+    display: flex;
+    align-items: center; /* Центрируем по вертикали */
+    margin-top: 10px; /* Отступ сверху */
+}
+
+.column-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: #E4EBFA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: bold;
+    color: #3F3F3F;
+    margin-right: 10px; /* Отступ между кругом и суммой */
+}
+
+.column-sum {
+    font-size: 18px;
+    font-weight: bold;
+    color: #3F3F3F;
+    margin-top: 32px; /* Отступ между суммой и кругом с названием */
+}
+
+.column-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #3F3F3F;
+}
+.task-details-title
+{
+  font-family: 'Roboto', sans-serif; /* Используем шрифт Roboto */
+   font-weight: 500; /* Medium */
+   font-size: 30px; /* Размер шрифта */
+}
+
+.task-details-container {
+    padding: 80px 76px 0; /* Верхний отступ 80px, левый и правый 76px, нижний 0 */
+}
+
+.task-num
+{
+font-family: 'Roboto', sans-serif; /* Используем шрифт Roboto */
+   font-weight: 500; /* Medium */
+   font-size: 24px; /* Размер шрифта */
+   color: #3F3F3F;
+}
+
+.task-details-container {
+    padding: 80px 76px; /* Отступы сверху и по бокам */
+}
+
+.editable-title {
+    font-size: 30px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    border-bottom: 1px dashed #ccc; /* Дашированная линия под текстом */
+    cursor: text; /* Указывает, что элемент можно редактировать */
+}
+
+
+
+.task-details-content {
+    margin-top: 44px;
+}
+
+.task-details-price
+{
+ margin-top: 44px;
+}
+
+h2
+{
+font-family: 'Roboto', sans-serif; /* Используем шрифт Roboto */
+   font-weight: 500; /* Medium */
+   font-size: 30px; /* Размер шрифта */
+   color: #3F3F3F;
+}
+
+.task-details-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.input-field {
+    width: 388px;
+    height: 36px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 40px; /* или любое другое расстояние между группами */
+}
+
+.input-label {
+    margin-bottom: 8px; /* Расстояние между label и input */
+}
+
+/* Контейнер для всей доски */
+.kanban-board-container {
+    position: relative;
+    padding: 20px;
+}
+
+.kanban-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 20px; /* Отступ от заголовка до колонок */
+}
+
+/* Кнопка "Добавить" */
+.create-deal-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.create-deal-button:hover {
+    background-color: #218838;
+}
+
+
