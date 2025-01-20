@@ -14,6 +14,9 @@ from customer_chat import customer_chat_router
 # Создаем приложение FastAPI
 app = FastAPI()
 
+# Монтируем статические файлы
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Настройки CORS
 app.add_middleware(
     CORSMiddleware,
@@ -34,10 +37,7 @@ app.state.secret_key = 'mamba676'
 
 # Роутеры
 # app.include_router(chat_router, prefix="/chat", tags=["Chat"])
-app.include_router(customer_chat_router, prefix="/customer_chat", tags=["Customer Chat"])
-
-# Подключаем директорию для статических файлов
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.include_router(customer_chat_router, tags=["Customer Chat"])
 
 templates = Jinja2Templates(directory="templates")
 

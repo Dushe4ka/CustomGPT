@@ -28,9 +28,9 @@ from customer.classification import classify_question, determine_stage
 from customer.faiss import save_question_index
 import faiss
 import numpy as np
-from langchain.memory import ConversationBufferMemory
 from customer.get_template import find_question_template
 from langchain.memory import ConversationBufferWindowMemory
+from langchain.memory import ConversationSummaryMemory
 
 # Настройка шаблонов
 templates = Jinja2Templates(directory="templates")
@@ -264,7 +264,7 @@ def classify_message_with_openai(message: str) -> bool:
     return "да" in response.content.lower()
 
 
-#memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+# memory = ConversationSummaryMemory(llm=llm)
 
 # Инициализация памяти для каждого пользователя
 user_memories = {}
