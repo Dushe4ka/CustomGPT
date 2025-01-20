@@ -11,7 +11,7 @@ load_dotenv()
 
 # API ключ OpenAI
 openai_api_key = os.getenv("OPENAI_API_KEY")
-
+print(openai_api_key)
 # Настройка подключения к базе данных
 
 DATABASE_URL = "postgresql://postgres:mamba1705@89.23.112.137/energy_actual"
