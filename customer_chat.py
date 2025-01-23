@@ -23,7 +23,6 @@ from models import Interaction
 
 import os
 
-
 # Настройка шаблонов
 templates = Jinja2Templates(directory="templates")
 
@@ -62,33 +61,39 @@ def save_interaction(session: Session, user_id: str, query: str, response: str) 
         session.rollback()
         logger.error(f"Ошибка сохранения взаимодействия: {e}", exc_info=True)
 
+def normalize_product_name(product_name: str) -> str:
+    """
+    Приводит название товара к нижнему регистру для унификации.
+    """
+    return product_name.lower().strip()
+
 def chatbot(state: State, session: Session) -> State:
     try:
         last_message = state["messages"][-1].content
         logger.info(f"Обработка сообщения: {last_message}")
 
-        if is_product_related(last_message):
-            product_info = find_product_in_faiss(last_message) or {}
+        # Приведение сообщения к нижнему регистру для унификации
+        normalized_message = normalize_product_name(last_message)
+
+        if is_product_related(normalized_message):
+            # Поиск информации о товаре
+            product_info = find_product_in_faiss(normalized_message) or {}
             state["current_product"] = product_info
 
             if product_info:
-                template = find_question_template(last_message)
-                response = template.format(
-                    product_name=product_info.get("product_name", "неизвестно"),
-                    availability=product_info.get("availability", "неизвестно"),
-                    price=product_info.get("price", "неизвестно")
-                )
+                template = find_question_template(normalized_message)
+                if template:
+                    response = template.format(
+                        product_name=product_info.get("product_name", "неизвестно"),
+                        availability=product_info.get("availability", "неизвестно"),
+                        price=product_info.get("price", "неизвестно")
+                    )
+                else:
+                    response = "Шаблон для данного товара не найден."
             else:
-                response = "Не удалось найти информацию о товаре."
+                response = "Информация о товаре отсутствует."
         else:
-            prompt = PromptTemplate.from_template(
-                """
-                Клиент задал вопрос: "{question}". Ответьте профессионально и дружелюбно.
-                Вопрос клиента: {question}
-                Ответ:
-                """
-            )
-            response = llm.invoke(prompt.format(question=last_message)).content
+            response = "Не удалось обработать запрос. Пожалуйста, уточните ваш вопрос."
 
         state["messages"].append(HumanMessage(content=response))
         logger.info(f"Сгенерированный ответ: {response}")
