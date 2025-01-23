@@ -1,46 +1,42 @@
-# -*- coding: windows-1251 -*-
+# -*- coding: utf-8 -*-
 
 import re
-import os
 import json
 import logging
-from typing import Optional, TypedDict, Annotated
-from datetime import datetime
-
+from typing import List, Optional, TypedDict
 from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-from sqlalchemy.sql import text
 from dotenv import load_dotenv
-
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import PromptTemplate
-from langchain.schema import HumanMessage, AIMessage
-from langchain_experimental.agents import create_csv_agent
+from langchain.schema import HumanMessage
 from langchain.memory import ConversationBufferWindowMemory
 from langgraph.graph import StateGraph, START, END
 from customer.classification import is_product_related
 from customer.faiss import find_product_in_faiss
-
+from customer.get_template import find_question_template
 from customer.config import logger, openai_api_key
 from db import get_db, SessionLocal
-from models import PredefinedQuestion, Interaction
+from models import Interaction
 
-# Настройка шаблонов
-from fastapi.templating import Jinja2Templates
+import os
+
+
+# РќР°СЃС‚СЂРѕР№РєР° С€Р°Р±Р»РѕРЅРѕРІ
 templates = Jinja2Templates(directory="templates")
 
-# Инициализация переменных
+# РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РјРѕРґРµР»РµР№ OpenAI
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
 if not openai_api_key:
-    raise ValueError("API ключ OpenAI не найден в переменных окружения")
+    raise ValueError("API РєР»СЋС‡ OpenAI РЅРµ РЅР°Р№РґРµРЅ РІ РїРµСЂРµРјРµРЅРЅС‹С… РѕРєСЂСѓР¶РµРЅРёСЏ")
 
-# Инициализация LLM и эмбеддингов
-llm = ChatOpenAI(api_key=openai_api_key, temperature=0)
+llm = ChatOpenAI(openai_api_key=openai_api_key)
 embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
 
-# Определение памяти пользователей
+# РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РїР°РјСЏС‚Рё РґР»СЏ РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
 user_memories = {}
 user_states = {}
 
@@ -49,16 +45,14 @@ def get_user_memory(user_id: str) -> ConversationBufferWindowMemory:
         user_memories[user_id] = ConversationBufferWindowMemory(k=10)
     return user_memories[user_id]
 
-# Определяем тип состояния
+# РћРїСЂРµРґРµР»РµРЅРёРµ С‚РёРїР° СЃРѕСЃС‚РѕСЏРЅРёСЏ
 class State(TypedDict):
-    messages: list[dict]  # История сообщений в виде списка словарей
-    current_product: Optional[dict]  # Информация о текущем товаре
+    messages: List[HumanMessage]  # РСЃС‚РѕСЂРёСЏ СЃРѕРѕР±С‰РµРЅРёР№
+    current_product: Optional[dict]  # РРЅС„РѕСЂРјР°С†РёСЏ Рѕ С‚РµРєСѓС‰РµРј РѕР±СЃСѓР¶РґР°РµРјРѕРј С‚РѕРІР°СЂРµ
 
-# Чистка текста от HTML-тегов
 def clean_html(text: str) -> str:
     return re.sub(r'<.*?>', '', text)
 
-# Сохранение взаимодействия
 def save_interaction(session: Session, user_id: str, query: str, response: str) -> None:
     try:
         interaction = Interaction(user_id=user_id, query=query, response=clean_html(response))
@@ -66,64 +60,59 @@ def save_interaction(session: Session, user_id: str, query: str, response: str) 
         session.commit()
     except Exception as e:
         session.rollback()
-        logger.error(f"Ошибка сохранения взаимодействия: {e}", exc_info=True)
+        logger.error(f"РћС€РёР±РєР° СЃРѕС…СЂР°РЅРµРЅРёСЏ РІР·Р°РёРјРѕРґРµР№СЃС‚РІРёСЏ: {e}", exc_info=True)
 
-# Извлечение данных из сообщения
-def extract_data(message: str) -> dict:
-    prompt = PromptTemplate.from_template("""
-    Извлеки данные в формате JSON:
-    - product_name: название товара.
-    - quantity: количество.
-    - method: доставка/самовывоз.
-    Сообщение: {message}
-    """)
-    response = llm.invoke(prompt.format(message=message))
-    try:
-        return json.loads(response.content if isinstance(response, AIMessage) else response)
-    except json.JSONDecodeError:
-        raise ValueError("Ошибка декодирования JSON из ответа.")
-
-# Узел графа: обработка сообщений
-async def chatbot(state: State, session: Session = Depends(get_db)) -> State:
+def chatbot(state: State, session: Session) -> State:
     try:
         last_message = state["messages"][-1].content
-        logger.info(f"Обработка сообщения: {last_message}")
+        logger.info(f"РћР±СЂР°Р±РѕС‚РєР° СЃРѕРѕР±С‰РµРЅРёСЏ: {last_message}")
 
-        # Проверка, связан ли вопрос с товаром
         if is_product_related(last_message):
             product_info = find_product_in_faiss(last_message) or {}
             state["current_product"] = product_info
 
             if product_info:
-                response = f"{product_info.get('product_name', 'Товар')} в наличии: {product_info.get('availability', 'неизвестно')} шт. Цена: {product_info.get('price', 'неизвестно')} руб."
+                template = find_question_template(last_message)
+                response = template.format(
+                    product_name=product_info.get("product_name", "РЅРµРёР·РІРµСЃС‚РЅРѕ"),
+                    availability=product_info.get("availability", "РЅРµРёР·РІРµСЃС‚РЅРѕ"),
+                    price=product_info.get("price", "РЅРµРёР·РІРµСЃС‚РЅРѕ")
+                )
             else:
-                response = "Не удалось найти информацию о товаре."
+                response = "РќРµ СѓРґР°Р»РѕСЃСЊ РЅР°Р№С‚Рё РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ С‚РѕРІР°СЂРµ."
         else:
-            prompt = PromptTemplate.from_template("""
-            Клиент задал вопрос: "{question}". Ответьте профессионально и дружелюбно.
-            Вопрос клиента: {question}
-            Ответ:
-            """)
+            prompt = PromptTemplate.from_template(
+                """
+                РљР»РёРµРЅС‚ Р·Р°РґР°Р» РІРѕРїСЂРѕСЃ: "{question}". РћС‚РІРµС‚СЊС‚Рµ РїСЂРѕС„РµСЃСЃРёРѕРЅР°Р»СЊРЅРѕ Рё РґСЂСѓР¶РµР»СЋР±РЅРѕ.
+                Р’РѕРїСЂРѕСЃ РєР»РёРµРЅС‚Р°: {question}
+                РћС‚РІРµС‚:
+                """
+            )
             response = llm.invoke(prompt.format(question=last_message)).content
 
         state["messages"].append(HumanMessage(content=response))
-        logger.info(f"Сгенерированный ответ: {response}")
+        logger.info(f"РЎРіРµРЅРµСЂРёСЂРѕРІР°РЅРЅС‹Р№ РѕС‚РІРµС‚: {response}")
         return state
     except Exception as e:
-        logger.error(f"Ошибка в узле графа: {e}", exc_info=True)
-        state["messages"].append(HumanMessage(content="Произошла ошибка, повторите запрос."))
+        logger.error(f"РћС€РёР±РєР° РІ СѓР·Р»Рµ РіСЂР°С„Р°: {e}", exc_info=True)
+        state["messages"].append(HumanMessage(content="РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°, РїРѕРІС‚РѕСЂРёС‚Рµ Р·Р°РїСЂРѕСЃ."))
         return state
 
-# Инициализация графа
+# РЎРѕР·РґР°РЅРёРµ РіСЂР°С„Р° СЃРѕСЃС‚РѕСЏРЅРёР№
 graph_builder = StateGraph(state_schema=State)
-graph_builder.add_node("start_node", lambda state: {"messages": [], "current_product": None})
+
+def start_node(state: State) -> State:
+    return {"messages": [], "current_product": None}
+
+graph_builder.add_node("start_node", start_node)
 graph_builder.add_node("chatbot", chatbot)
 graph_builder.add_edge(START, "start_node")
 graph_builder.add_edge("start_node", "chatbot")
 graph_builder.add_edge("chatbot", END)
+
 graph = graph_builder.compile()
 
-# Роутеры
+# РЎРѕР·РґР°РЅРёРµ API СЂРѕСѓС‚РµСЂР°
 customer_chat_router = APIRouter()
 
 @customer_chat_router.get("/customer/customer-chat", response_class=HTMLResponse)
@@ -137,22 +126,18 @@ async def respond_to_message(data: dict, db: Session = Depends(get_db)):
         user_id = data.get("user_id", "user124")
 
         if not user_message:
-            raise HTTPException(status_code=400, detail="Вопрос не предоставлен.")
+            raise HTTPException(status_code=400, detail="Р’РѕРїСЂРѕСЃ РЅРµ РїСЂРµРґРѕСЃС‚Р°РІР»РµРЅ.")
 
-        # Извлечение состояния пользователя
         user_state = user_states.get(user_id, {"messages": [], "current_product": None})
         user_state["messages"].append(HumanMessage(content=user_message))
 
-        # Запуск графа
-        updated_state = await chatbot(user_state, db)
+        updated_state = chatbot(user_state, db)
 
-        # Сохранение взаимодействия
         response_text = updated_state["messages"][-1].content
         save_interaction(db, user_id, user_message, response_text)
 
-        # Обновление состояния пользователя
         user_states[user_id] = updated_state
         return JSONResponse(content={"answer": [response_text]})
     except Exception as e:
-        logger.error(f"Ошибка обработки сообщения: {e}", exc_info=True)
-        return JSONResponse(content={"answer": ["Произошла ошибка. Повторите запрос."]}, status_code=500)
+        logger.error(f"РћС€РёР±РєР° РѕР±СЂР°Р±РѕС‚РєРё СЃРѕРѕР±С‰РµРЅРёСЏ: {e}", exc_info=True)
+        return JSONResponse(content={"answer": ["РџСЂРѕРёР·РѕС€Р»Р° РѕС€РёР±РєР°. РџРѕРІС‚РѕСЂРёС‚Рµ Р·Р°РїСЂРѕСЃ."]}, status_code=500)

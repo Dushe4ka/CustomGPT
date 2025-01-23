@@ -1,16 +1,20 @@
 # -*- coding: windows-1251 -*-
-from models import PredefinedQuestion  # Модель из базы данных
-from db import SessionLocal
-import os  # Для проверки существования файлов
-import faiss  # Для работы с FAISS индексами
-import numpy as np  # Для работы с массивами идентификаторов
-from langchain_openai import OpenAIEmbeddings  # Для генерации эмбеддингов
-from customer.config import SessionLocal, logger, openai_api_key  # Для работы с базой данных, логирование и ключ API
-from sqlalchemy.sql import text  # Для выполнения SQL-запросов
-from typing import Optional  # Для аннотации возвращаемого типа
-from customer.faiss import save_question_index  # Для пересоздания FAISS индекса
+import os
+import faiss
+import numpy as np
+from sqlalchemy.sql import text
+from sqlalchemy.orm import Session
+from langchain_openai import OpenAIEmbeddings
+from typing import Optional
+from customer.config import SessionLocal, logger, openai_api_key
+from customer.faiss import save_question_index
+from models import PredefinedQuestion
 
-def get_response_template(session: SessionLocal, category: str, stage: str) -> Optional[str]:
+# Пороговое значение для поиска в FAISS
+FAISS_THRESHOLD = 0.5
+
+
+def get_response_template(session: Session, category: str, stage: str) -> Optional[str]:
     """
     Получает шаблон ответа из таблицы predefined_questions на основе категории и стадии диалога.
 
@@ -39,6 +43,7 @@ def get_response_template(session: SessionLocal, category: str, stage: str) -> O
         logger.error(f"Ошибка при получении шаблона для категории '{category}' и стадии '{stage}': {e}")
         return None
 
+
 def find_question_template(query: str) -> Optional[str]:
     """
     Находит шаблон ответа на основе вопроса пользователя, используя FAISS.
@@ -47,7 +52,7 @@ def find_question_template(query: str) -> Optional[str]:
     try:
         # Проверяем существование файлов
         if not os.path.exists("question_index.faiss") or not os.path.exists("question_ids.npy"):
-            logger.info("Индекс вопросов отсутствует. Создаём новый индекс.")
+            logger.warning("Индекс вопросов отсутствует. Создаём новый индекс.")
             save_question_index()
 
         # Чтение индекса и идентификаторов вопросов
@@ -56,7 +61,7 @@ def find_question_template(query: str) -> Optional[str]:
         logger.info("Индекс вопросов и идентификаторы успешно загружены.")
 
         # Генерация эмбеддинга для запроса
-        embeddings = OpenAIEmbeddings(api_key=openai_api_key)
+        embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
         query_vector = embeddings.embed_query(query)
 
         # Поиск ближайших соседей
@@ -64,15 +69,14 @@ def find_question_template(query: str) -> Optional[str]:
         logger.info(f"Результаты поиска: D={D}, I={I}")
 
         # Проверка результата
-        if len(I[0]) > 0 and D[0][0] < 0.5:  # Пороговое значение можно настроить
+        if len(I[0]) > 0 and D[0][0] < FAISS_THRESHOLD:
             matched_question_id = question_ids[I[0][0]]
             logger.info(f"Найден подходящий вопрос с ID: {matched_question_id}")
 
             # Извлекаем шаблон ответа из базы данных
-            session = SessionLocal()
-            query = text("SELECT answer FROM predefined_questions WHERE id = :id")
-            result = session.execute(query, {"id": int(matched_question_id)}).scalar()
-            session.close()
+            with SessionLocal() as session:
+                query = text("SELECT answer FROM predefined_questions WHERE id = :id")
+                result = session.execute(query, {"id": int(matched_question_id)}).scalar()
 
             if result:
                 logger.info(f"Шаблон ответа: {result}")
